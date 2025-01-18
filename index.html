@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantumcona - Enterprise Trading Solutions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        trading: {
+                            green: '#00C805',
+                            red: '#FF3B30',
+                        }
+                    },
+                    keyframes: {
+                        'fade-in-up': {
+                            '0%': {
+                                opacity: '0',
+                                transform: 'translateY(20px)'
+                            },
+                            '100%': {
+                                opacity: '1',
+                                transform: 'translateY(0)'
+                            },
+                        },
+                        'market-ticker': {
+                            '0%': { transform: 'translateX(0)' },
+                            '100%': { transform: 'translateX(-100%)' }
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fade-in-up 0.5s ease-out',
+                        'market-ticker': 'market-ticker 20s linear infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .market-data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .trading-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .trading-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .market-ticker-container {
+            overflow: hidden;
+        }
+
+        .market-ticker {
+            display: flex;
+            white-space: nowrap;
+            animation: market-ticker 30s linear infinite;
+            /* Increased duration for smoother loop */
+        }
+
+        .market-ticker:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes market-ticker {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+                /* Move to the left by 50% (one set's width) */
+            }
+        }
+
+        .hero-gradient {
+            background:
+                radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.1) 0%, transparent 40%);
+        }
+
+        .terminal-window {
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+
+        .terminal-header {
+            background: #333;
+            padding: 8px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-close {
+            background: #ff5f56;
+        }
+
+        .terminal-minimize {
+            background: #ffbd2e;
+        }
+
+        .terminal-maximize {
+            background: #27c93f;
+        }
+
+        .terminal-content {
+            padding: 16px;
+            color: #00ff00;
+        }
+
+        .typing-animation {
+            overflow: hidden;
+            border-right: .15em solid #00ff00;
+            white-space: nowrap;
+            animation: typing 3.5s steps(40, end),
+                blink-caret .75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from {
+                width: 0
+            }
+
+            to {
+                width: 100%
+            }
+        }
+
+        @keyframes blink-caret {
+
+            from,
+            to {
+                border-color: transparent
+            }
+
+            50% {
+                border-color: #00ff00;
+            }
+        }
+
+        .market-data-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .market-data-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(14, 165, 233, 0.5);
+        }
+
+        .platform-feature {
+            transition: all 0.3s ease;
+        }
+
+        .platform-feature:hover {
+            transform: translateY(-5px);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(14, 165, 233, 0.5);
+            border-radius: 3px;
+        }
+
+        /* Additional Styles */
+        .chart-container {
+            background: linear-gradient(180deg, rgba(14, 165, 233, 0.05) 0%, rgba(14, 165, 233, 0) 100%);
+            border: 1px solid rgba(14, 165, 233, 0.1);
+            border-radius: 8px;
+            min-height: 300px;
+        }
+
+        .testimonial-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .pricing-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(14, 165, 233, 0.5);
+        }
+
+        .api-code-block {
+            background: #1a1a1a;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .placeholder-image {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 300px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #38bdf8;
+            font-size: 2em;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+            /*added transition to the container*/
+            overflow: hidden;
+
+
+        }
+
+
+        .placeholder-image:hover {
+            transform: scale(1.1);
+        }
+
+        .gradient-border {
+            position: relative;
+            background: #000;
+            padding: 1px;
+        }
+
+        .gradient-border::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 2px;
+            background: linear-gradient(135deg,
+                    #60A5FA,
+                    #3B82F6,
+                    #2563EB);
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+
+        .service-box {
+            background: rgba(255, 255, 255, 0.056);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .service-box:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+
+<body class="bg-black text-white custom-scrollbar">
+    <!-- Market Ticker -->
+    <div class="bg-gray-900 py-2 overflow-hidden border-b border-gray-800">
+        <div class="market-ticker-container">
+            <div class="market-ticker">
+                <div class="flex space-x-12 market-ticker-content" id="ticker-content">
+                    <span class="text-trading-green">BTC/USD +2.45%</span>
+                    <span class="text-trading-red">ETH/USD -1.23%</span>
+                    <span class="text-trading-green">EUR/USD +0.15%</span>
+                    <span class="text-trading-green">AAPL +1.87%</span>
+                    <span class="text-trading-red">GOOGL -0.92%</span>
+                    <span class="text-trading-green">TSLA +3.45%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-gray-800">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Brand Logo -->
+                <a href="#" class="text-2xl font-bold text-primary-400">Quantumcona</a>
+
+                <!-- Hamburger Menu for Mobile -->
+                <button id="menu-toggle"
+                    class="md:hidden fixed top-4 right-4 z-50 p-2 text-gray-300 hover:text-primary-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                </button>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#about" class="text-gray-300 hover:text-primary-400 transition-colors">About</a>
+                    <a href="#services" class="text-gray-300 hover:text-primary-400 transition-colors">Services</a>
+                    <a href="#technology" class="text-gray-300 hover:text-primary-400 transition-colors">Technology</a>
+                    <a href="#pricing" class="text-gray-300 hover:text-primary-400 transition-colors">Pricing</a>
+                    <a href="#contact" class="text-gray-300 hover:text-primary-400 transition-colors">Contact</a>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#" class="text-gray-300 hover:text-primary-400 transition-colors">Login</a>
+                    <a href="#" class="bg-primary-500 hover:bg-primary-600 px-6 py-2 rounded-md transition-colors">
+                        Get Started
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden fixed md:hidden bg-black w-full z-40 px-8 py-20 p pb-10 pt-16"
+                style="left:0px;">
+                <div class="flex flex-col items-center space-y-4">
+                    <a href="#about"
+                        class="w-full text-center text-gray-300 hover:text-primary-400 text-lg font-medium transition-colors">About</a>
+                    <a href="#services"
+                        class="w-full text-center text-gray-300 hover:text-primary-400 text-lg font-medium transition-colors">Services</a>
+                    <a href="#technology"
+                        class="w-full text-center text-gray-300 hover:text-primary-400 text-lg font-medium transition-colors">Technology</a>
+                    <a href="#pricing"
+                        class="w-full text-center text-gray-300 hover:text-primary-400 text-lg font-medium transition-colors">Pricing</a>
+                    <a href="#contact"
+                        class="w-full text-center text-gray-300 hover:text-primary-400 text-lg font-medium transition-colors">Contact</a>
+
+                    <div class="flex flex-col w-full space-y-4 pt-4">
+                        <a href="#"
+                            class="w-full text-center text-gray-300 hover:text-primary-400 text-lg font-medium transition-colors">Login</a>
+                        <a href="#"
+                            class="w-full bg-primary-500 hover:bg-primary-600 px-6 py-3 rounded-md text-white text-center text-lg font-medium transition-colors">
+                            Get Started
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </nav>
+    <!-- Hero Section -->
+    <section class="hero-gradient min-h-screen flex items-center py-20 sm:overflow-x-hidden sm:px-4">
+        <div class="container mx-auto px-6 max-w-full">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-8">
+                    <h1 class="text-5xl lg:text-7xl font-bold leading-tight">
+                        Enterprise-Grade <span class="text-primary-400">Trading</span> Infrastructure
+                    </h1>
+                    <p class="text-xl text-gray-400">
+                        Institutional-grade trading solutions powered by advanced algorithms and real-time market data.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="#"
+                            class="bg-primary-500 hover:bg-primary-600 px-8 py-3 rounded-md text-center transition-colors">
+                            Start Trading
+                        </a>
+                        <a href="#"
+                            class="border border-gray-700 hover:border-primary-500 px-8 py-3 rounded-md text-center transition-colors">
+                            Schedule Demo
+                        </a>
+                    </div>
+                    <div class="flex items-center space-x-8 text-sm text-gray-400">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>24/7 Trading</span>
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Multi-Asset</span>
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Low Latency</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div class="terminal-window">
+                        <div class="terminal-header">
+                            <div class="terminal-button terminal-close"></div>
+                            <div class="terminal-button terminal-minimize"></div>
+                            <div class="terminal-button terminal-maximize"></div>
+                        </div>
+                        <div class="terminal-content">
+                            <div class="typing-animation">
+                                > Initializing trading algorithm...<br />
+                                > Connecting to markets...<br />
+                                > Running strategy backtest...<br />
+                                > Performance analysis complete<br />
+                                > Ready to trade
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Market Data Section -->
+    <section class="py-20 bg-gray-900">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-lg md:text-xl text-primary-400 font-medium tracking-wide mb-8">
+                Real-time Market Insights
+            </p>
+            <div class="grid lg:grid-cols-4 gap-6">
+                <div class="market-data-card p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Live Market Data</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between">
+                            <span>S&P 500</span>
+                            <span class="text-trading-green">+1.2%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>NASDAQ</span>
+                            <span class="text-trading-red">-0.8%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>DOW</span>
+                            <span class="text-trading-green">+0.9%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="market-data-card p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Cryptocurrency</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between">
+                            <span>Bitcoin (BTC)</span>
+                            <span class="text-trading-green">+2.4%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Ethereum (ETH)</span>
+                            <span class="text-trading-red">-1.5%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Litecoin (LTC)</span>
+                            <span class="text-trading-green">+1.1%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="market-data-card p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Currencies</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between">
+                            <span>EUR/USD</span>
+                            <span class="text-trading-green">+0.5%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>GBP/USD</span>
+                            <span class="text-trading-red">-0.3%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>USD/JPY</span>
+                            <span class="text-trading-green">+0.2%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="market-data-card p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Commodities</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between">
+                            <span>Gold</span>
+                            <span class="text-trading-green">+0.7%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Crude Oil</span>
+                            <span class="text-trading-red">-0.4%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Silver</span>
+                            <span class="text-trading-green">+1.0%</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Add more market data cards -->
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us -->
+    <section id="about" class="py-20 bg-gray-900">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-lg md:text-xl text-primary-400 font-medium tracking-wide mb-4">
+                About Us
+            </p>
+            <h2 class="text-4xl font-bold mb-16 text-center">Who We Are</h2>
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h3 class="text-2xl font-bold mb-4">Our Mission</h3>
+                    <p class="text-gray-400 mb-6">
+                        Our mission is to simplify and empower trading through advanced technologies and expert
+                        guidance. We aim to provide cutting-edge algorithmic trading solutions and quantitative
+                        consulting services to both individual traders and businesses, while ensuring clarity in our
+                        value proposition.
+                    </p>
+                    <h3 class="text-2xl font-bold mb-4">Our Vision</h3>
+                    <p class="text-gray-400 mb-6">
+                        We strive to be a trusted and innovative leader in the Quant and Algo Trading space, pushing the
+                        boundaries of what's possible with AI and machine learning. Our vision is to make advanced
+                        trading accessible to everyone.
+                    </p>
+                    <h3 class="text-2xl font-bold mb-4">Our Vision</h3>
+                    <p class="text-gray-400 mb-6">
+                        We strive to be a trusted and innovative leader in the Quant and Algo Trading space, pushing the
+                        boundaries of what's possible with AI and machine learning. Our vision is to make advanced
+                        trading accessible to everyone.
+                    </p>
+                </div>
+                <div class="placeholder-image">
+                    <img src="about.png" alt="Description of your image"
+                        class="object-cover h-full w-full rounded-lg" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services -->
+    <section id="services" class="py-20 bg-black">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-lg md:text-xl text-primary-400 font-medium tracking-wide mb-4">
+                Our Expertise
+            </p>
+            <h2 class="text-4xl font-bold mb-16 text-center">What We Offer</h2>
+            <div class="grid md:grid-cols-2 gap-12">
+                <div class="service-box space-y-6">
+                    <div class="placeholder-image">
+                        <img src="strategy.png" alt="Strategy Development Image"
+                            class="object-cover h-80 w-full rounded-lg" />
+                    </div>
+                    <h3 class="text-2xl font-bold pt-8 mb-4">Strategy Development & Backtesting</h3>
+                    <p class="text-gray-400">
+                        We help you develop robust trading strategies using advanced analytical methods. We perform
+                        thorough backtesting using historical data. We work to ensure optimal performance before
+                        deployment.
+                    </p>
+                    <h3 class="text-2xl font-bold mb-4 mt-8">Automation Solutions</h3>
+                    <p class="text-gray-400">
+                        We provide comprehensive automation tools. We can streamline your trading process, enhance
+                        efficiency, and reduce manual intervention.
+                    </p>
+                </div>
+                <div class="service-box space-y-6">
+                    <div class="placeholder-image">
+                        <img src="dashboard.png" alt="Proprietary Algo Image"
+                            class="object-cover h-80 w-full rounded-lg" />
+                    </div>
+                    <h3 class="text-2xl pt-8 font-bold mb-4">Proprietary Algo Services</h3>
+                    <p class="text-gray-400">
+                        We offer access to our proprietary algorithms, built on the latest AI and ML. They are designed
+                        to execute advanced trading strategies with high speed and accuracy.
+                    </p>
+                    <h3 class="text-2xl font-bold mb-4 mt-8">Consultation Services</h3>
+                    <p class="text-gray-400">
+                        We offer expert consultation. We assist in developing custom trading solutions. We can help you
+                        leverage advanced technologies and our expert guidance to meet your unique trading goals.
+                    </p>
+                </div>
+            </div>
+            <div class="flex justify-center mt-8">
+                <a href="#contact"
+                    class=" bg-primary-500 hover:bg-primary-600 px-6 py-2 rounded-md transition-colors inline-block">Request
+                    Consultation</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Platform Features -->
+    <section id="platform" class="py-20 bg-black">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-lg md:text-xl text-primary-400 font-medium tracking-wide mb-4">
+                Powerful Tools
+            </p>
+            <h2 class="text-4xl font-bold mb-16 text-center">Platform Capabilities</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="platform-feature p-6 bg-gray-900 rounded-lg">
+                    <div class="h-12 w-12 bg-primary-500/20 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">High-Frequency Trading</h3>
+                    <p class="text-gray-400">Ultra-low latency infrastructure for high-frequency trading strategies.</p>
+                </div>
+                <div class="platform-feature p-6 bg-gray-900 rounded-lg">
+                    <div class="h-12 w-12 bg-primary-500/20 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Advanced Charting Tools</h3>
+                    <p class="text-gray-400">Interactive charts with 100+ technical indicators and drawing tools.</p>
+                </div>
+                <div class="platform-feature p-6 bg-gray-900 rounded-lg">
+                    <div class="h-12 w-12 bg-primary-500/20 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Algorithmic Trading</h3>
+                    <p class="text-gray-400">Develop and deploy custom trading algorithms with our flexible API.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Stack -->
+    <section id="technology" class="py-20 bg-gray-900">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-lg md:text-xl text-primary-400 font-medium tracking-wide mb-4">
+                Our Infrastructure
+            </p>
+            <h2 class="text-4xl font-bold mb-16 text-center">Powered by Advanced Technology</h2>
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <h3 class="text-2xl font-bold mb-4">Infrastructure</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>High-performance servers in major financial hubs</span>
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Redundant network architecture for maximum uptime</span>
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Direct market access via FIX protocol</span>
+                        </li>
+                    </ul>
+                    <h3 class="text-2xl font-bold mt-8 mb-4">API</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>REST and WebSocket API for custom integrations</span>
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Comprehensive market data feeds</span>
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Real-time order and account updates</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="chart-container">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Proprietary Algo Page -->
+    <section id="proprietary-algo" class="py-20 bg-gray-900">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-lg md:text-xl text-primary-400 font-medium tracking-wide mb-4">
+                Our Algo Trading
+            </p>
+            <h2 class="text-4xl font-bold mb-16 text-center">Proprietary Advantage</h2>
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <h3 class="text-2xl font-bold mb-4">Automated & Semi-Automated Trading</h3>
+                    <p class="text-gray-400">
+                        Our proprietary algorithms are crafted to deliver superior results in both automated and
+                        semi-automated trading environments. They aim to reduce risks and maximize profits through
+                        sophisticated data analysis and real-time market adaptability.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Improved trading speed and precision.</span>
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Optimized strategy execution.</span>
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Reduced emotional impact on trading decisions.</span>
+                        </li>
+                    </ul>
+                    <a href="#"
+                        class="bg-primary-500 hover:bg-primary-600 px-6 py-2 rounded-md transition-colors inline-block">Request
+                        Demo</a>
+                </div>
+                <div>
+                    <div>
+                        <div class="relative algo-visual mb-4">
+                            <div class="rounded-md overflow-hidden">
+                                <video class="algo-video w-full block" autoplay loop muted playsinline>
+                                    <source src="algo.mp4" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </section>
+
+    <!-- Live Trading Features -->
+    <section id="features" class="py-20 bg-gray-900">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-lg md:text-xl text-primary-400 font-medium tracking-wide mb-4">
+                Trading Tools
+            </p>
+            <h2 class="text-4xl font-bold mb-16 text-center">Professional Tools and Capabilities</h2>
+            <div class="feature-grid">
+                <div class="p-6 bg-black rounded-lg">
+                    <div class="h-12 w-12 bg-primary-500/20 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Advanced Charting</h3>
+                    <p class="text-gray-400">Professional-grade charting with over 100+ technical indicators and drawing
+                        tools.</p>
+                </div>
+                <!-- Additional feature cards -->
+                <div class="p-6 bg-black rounded-lg">
+                    <div class="h-12 w-12 bg-primary-500/20 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Ultra-Low Latency</h3>
+                    <p class="text-gray-400">Execute trades with microsecond precision through our advanced
+                        infrastructure.</p>
+                </div>
+                <div class="p-6 bg-black rounded-lg">
+                    <div class="h-12 w-12 bg-primary-500/20 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Enterprise Security</h3>
+                    <p class="text-gray-400">Bank-grade security with multi-factor authentication and encrypted
+                        connections.</p>
+                </div>
+                <div class="p-6 bg-black rounded-lg">
+                    <div class="h-12 w-12 bg-primary-500/20 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Historical Data</h3>
+                    <p class="text-gray-400">Access extensive historical market data for backtesting and analysis.</p>
+                </div>
+                <div class="p-6 bg-black rounded-lg">
+                    <div class="h-12 w-12 bg-primary-500/20 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Order Execution</h3>
+                    <p class="text-gray-400">Advanced order types, including limit, market, and stop orders.</p>
+                </div>
+                <div class="p-6 bg-black rounded-lg">
+                    <div class="h-12 w-12 bg-primary-500/20 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-1h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Risk Management</h3>
+                    <p class="text-gray-400">Comprehensive risk management tools to help protect your trading capital.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Integration -->
+    <section class="py-20 bg-black">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-lg md:text-xl text-primary-400 font-medium tracking-wide mb-4">
+                Integration Power
+            </p>
+            <h2 class="text-4xl font-bold mb-12 md:mb-16 text-center">API Integration</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                <div class="space-y-8">
+                    <div class="relative api-code-block rounded-2xl overflow-hidden">
+                        <div class="p-6 overflow-x-auto custom-scrollbar gradient-border">
+                            <pre class="text-green-400 whitespace-pre-wrap break-words text-sm md:text-base">
+                                <code>
+                // Connect to WebSocket
+                const ws = new WebSocket('wss://api.quantumcona.com/v1/market');
+            
+                // Subscribe to market data
+                ws.send(JSON.stringify({
+                    "action": "subscribe",
+                    "symbols": ["BTC-USD", "ETH-USD"],
+                    "channels": ["trades", "orderbook"]
+                }));
+                                </code>
+                            </pre>
+                        </div>
+                        <div
+                            class="absolute bottom-3 right-3 cursor-pointer text-gray-500 hover:text-gray-300 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="p-6 bg-gray-900 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4">REST API</h3>
+                        <ul class="space-y-3 text-gray-400">
+                            <li>Market Data</li>
+                            <li>Order Management</li>
+                            <li>Account Information</li>
+                            <li>Historical Data</li>
+                        </ul>
+                    </div>
+                    <div class="p-6 bg-gray-900 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4">WebSocket API</h3>
+                        <ul class="space-y-3 text-gray-400">
+                            <li>Real-time Trades</li>
+                            <li>Order Book Updates</li>
+                            <li>Price Tickers</li>
+                            <li>Account Updates</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-20 bg-black">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-lg md:text-xl text-primary-400 font-medium tracking-wide mb-4">
+                Our Pricing
+            </p>
+            <h2 class="text-4xl font-bold mb-16 text-center">Flexible Pricing Plans</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="pricing-card p-8 rounded-lg">
+                    <h3 class="text-2xl font-bold mb-4">Standard</h3>
+                    <div class="text-4xl font-bold mb-6">$99<span class="text-lg text-gray-400">/month</span></div>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Basic market data
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Standard API access
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Email support
+                        </li>
+                    </ul>
+                    <a href="#"
+                        class="block text-center bg-primary-500 hover:bg-primary-600 px-6 py-3 rounded-md transition-colors">
+                        Get Started
+                    </a>
+                </div>
+                <div class="pricing-card p-8 rounded-lg">
+                    <h3 class="text-2xl font-bold mb-4">Professional</h3>
+                    <div class="text-4xl font-bold mb-6">$299<span class="text-lg text-gray-400">/month</span></div>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Full market data
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Advanced API access
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            24/7 priority support
+                        </li>
+                    </ul>
+                    <a href="#"
+                        class="block text-center bg-primary-500 hover:bg-primary-600 px-6 py-3 rounded-md transition-colors">
+                        Get Started
+                    </a>
+                </div>
+                <div class="pricing-card p-8 rounded-lg">
+                    <h3 class="text-2xl font-bold mb-4">Enterprise</h3>
+                    <div class="text-4xl font-bold mb-6">Custom<span class="text-lg text-gray-400">/month</span></div>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Dedicated server
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Full API customization
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Dedicated account manager
+                        </li>
+                    </ul>
+                    <a href="#"
+                        class="block text-center bg-primary-500 hover:bg-primary-600 px-6 py-3 rounded-md transition-colors">
+                        Contact Us
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="py-20 bg-black">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-lg md:text-xl text-primary-400 font-medium tracking-wide mb-4">
+                Our Clients
+            </p>
+            <h2 class="text-4xl font-bold mb-16 text-center">Trusted by Trading Professionals</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="testimonial-card p-8 rounded-lg">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-full overflow-hidden">
+                            <img src="client1.jpg" alt="John Smith" class="object-cover h-full w-full" />
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="font-bold">John Smith</h4>
+                            <p class="text-gray-400">Hedge Fund Manager</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-300">"Quantumcona's platform has revolutionized our trading operations with its
+                        powerful automation capabilities and reliable execution."</p>
+                </div>
+                <div class="testimonial-card p-8 rounded-lg">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-full overflow-hidden">
+                            <img src="client2.jpg" Alice Brown" class="object-cover h-full w-full" />
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="font-bold">Alice Brown</h4>
+                            <p class="text-gray-400">Proprietary Trader</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-300">"The speed and stability of Quantumcona's infrastructure are unmatched,
+                        allowing me to execute complex trading strategies with ease."</p>
+                </div>
+                <div class="testimonial-card p-8 rounded-lg">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-full overflow-hidden">
+                            <img src="client3.jpg" alt="David Lee" class="object-cover h-full w-full" />
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="font-bold">David Lee</h4>
+                            <p class="text-gray-400">Institutional Investor</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-300">"Quantumcona's platform has proven to be a reliable and efficient solution
+                        for
+                        our firm, handling high volumes of trades without any downtime."</p>
+                </div>
+                <!-- Add more testimonials -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Blog/Resources -->
+    <section id="blog" class="py-20 bg-gray-900">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-lg md:text-xl text-primary-400 font-medium tracking-wide mb-4">
+                Our Latest Insights
+            </p>
+            <h2 class="text-4xl font-bold mb-16 text-center">Latest from Our Blog</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="p-6 bg-black rounded-lg">
+                    <div class="placeholder-image mb-4">
+                        <img src="blog1.png" alt="Blog Article Image 1" class="object-cover h-full w-full rounded-lg" />
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Article 1</h3>
+                    <p class="text-gray-400">
+                        A detailed analysis of algorithmic trading trends. This is a great place for us to provide key
+                        information to our users.
+                    </p>
+                    <a href="#" class="text-primary-400 hover:text-primary-500 mt-4 inline-block">Read More</a>
+                </div>
+                <div class="p-6 bg-black rounded-lg">
+                    <div class="placeholder-image mb-4">
+                        <img src="blog2.png" alt="Blog Article Image 2" class="object-cover h-full w-full rounded-lg" />
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Article 2</h3>
+                    <p class="text-gray-400">
+                        An insight into our latest technology stack. This is a great place for us to provide key
+                        information
+                        to our users.
+                    </p>
+                    <a href="#" class="text-primary-400 hover:text-primary-500 mt-4 inline-block">Read More</a>
+                </div>
+                <div class="p-6 bg-black rounded-lg">
+                    <div class="placeholder-image mb-4">
+                        <img src="blog3.png" alt="Blog Article Image 3" class="object-cover h-full w-full rounded-lg" />
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Article 3</h3>
+                    <p class="text-gray-400">
+                        Our findings from the backtesting analysis. This is a great place for us to provide key
+                        information
+                        to our users.
+                    </p>
+                    <a href="#" class="text-primary-400 hover:text-primary-500 mt-4 inline-block">Read More</a>
+                </div>
+            </div>
+            <div class="text-center mt-8">
+                <a href="#"
+                    class="bg-primary-500 hover:bg-primary-600 px-6 py-2 rounded-md transition-colors inline-block">View
+                    All
+                    Blog Posts</a>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Contact Page -->
+    <section id="contact" class="py-20 bg-black">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-lg md:text-xl text-primary-400 font-medium tracking-wide mb-4">
+                Get In Touch
+            </p>
+            <h2 class="text-4xl font-bold mb-16 text-center">Contact Us</h2>
+            <div class="grid lg:grid-cols-2 gap-12 items-start">
+                <div>
+                    <h3 class="text-2xl font-bold mb-4">General Inquiries</h3>
+                    <p class="text-gray-400 mb-6">
+                        For general questions about our platform or services, please fill out the form below. We will
+                        get back to you promptly.
+                    </p>
+                    <form class="space-y-6">
+                        <div>
+                            <label class="block mb-2 text-gray-400">Name</label>
+                            <input type="text" class="bg-gray-800 border border-gray-700 rounded-md w-full p-3">
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-gray-400">Email</label>
+                            <input type="email" class="bg-gray-800 border border-gray-700 rounded-md w-full p-3">
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-gray-400">Message</label>
+                            <textarea rows="4"
+                                class="bg-gray-800 border border-gray-700 rounded-md w-full p-3"></textarea>
+                        </div>
+                        <button class="bg-primary-500 hover:bg-primary-600 px-6 py-2 rounded-md transition-colors">Send
+                            Message</button>
+                    </form>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold mb-4">Request for Proposal (RFP)</h3>
+                    <p class="text-gray-400 mb-6">
+                        "For custom projects or trading solutions, please submit an RFP below. Tell us what you need,
+                        and we'll get back to you shortly."
+                    </p>
+                    <form class="space-y-6">
+                        <div>
+                            <label class="block mb-2 text-gray-400">Company Name</label>
+                            <input type="text" class="bg-gray-800 border border-gray-700 rounded-md w-full p-3">
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-gray-400">Contact Person</label>
+                            <input type="text" class="bg-gray-800 border border-gray-700 rounded-md w-full p-3">
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-gray-400">Email</label>
+                            <input type="email" class="bg-gray-800 border border-gray-700 rounded-md w-full p-3">
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-gray-400">Project Description</label>
+                            <textarea rows="4"
+                                class="bg-gray-800 border border-gray-700 rounded-md w-full p-3"></textarea>
+                        </div>
+                        <button
+                            class="bg-primary-500 hover:bg-primary-600 px-6 py-2 rounded-md transition-colors">Submit
+                            RFP</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-8 text-center md:text-left">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Quantumcona</h3>
+                    <p class="text-gray-400">Enterprise-grade trading solutions for professional traders and institutions.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Products</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-primary-400">Trading Platform</a></li>
+                        <li><a href="#" class="hover:text-primary-400">API Access</a></li>
+                        <li><a href="#" class="hover:text-primary-400">Market Data</a></li>
+                        <li><a href="#" class="hover:text-primary-400">Analytics</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Company</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-primary-400">About</a></li>
+                        <li><a href="#" class="hover:text-primary-400">Careers</a></li>
+                        <li><a href="#" class="hover:text-primary-400">Blog</a></li>
+                        <li><a href="#" class="hover:text-primary-400">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-primary-400">Terms of Service</a></li>
+                        <li><a href="#" class="hover:text-primary-400">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-primary-400">Risk Disclosure</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400">© 2025 Quantumcona. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0 justify-center md:justify-start">
+                    <a href="#" class="text-gray-400 hover:text-primary-400">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84">
+                            </path>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-primary-400">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-primary-400">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c5.51 0 10-4.48 10-10S17.51 2 12 2zm6.605 4.61a8.502 8.502 0 011.93 5.314c-.281-.054-3.101-.629-5.943-.271-.065-.141-.12-.293-.184-.445a25.416 25.416 0 00-.564-1.236c3.145-1.28 4.577-3.124 4.761-3.362zM12 3.475c2.17 0 4.154.813 5.662 2.148-.152.216-1.443 1.941-4.48 3.08-1.399-2.57-2.95-4.675-3.189-5A8.687 8.687 0 0112 3.475zm-3.633.803a53.896 53.896 0 013.167 4.935c-3.992 1.063-7.517 1.04-7.896 1.04a8.581 8.581 0 014.729-5.975zM3.453 12.01v-.26c.37.01 4.512.065 8.775-1.215.25.477.477.965.694 1.453-.109.033-.228.065-.336.098-4.404 1.42-6.747 5.303-6.942 5.629a8.522 8.522 0 01-2.19-5.705zM12 20.547a8.482 8.482 0 01-5.239-1.8c.152-.315 1.888-3.656 6.703-5.337.022-.01.033-.01.054-.022a35.318 35.318 0 011.823 6.475 8.4 8.4 0 01-3.341.684zm4.761-1.465c-.086-.52-.542-3.015-1.659-6.084 2.679-.423 5.022.271 5.314.369a8.468 8.468 0 01-3.655 5.715z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <script>
+        // Initialize GSAP ScrollTrigger
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Animate elements on scroll
+        const animateOnScroll = () => {
+            gsap.utils.toArray('section').forEach(section => {
+                gsap.from(section, {
+                    opacity: 0,
+                    y: 50,
+                    duration: 1,
+                    scrollTrigger: {
+                        trigger: section,
+                        start: 'top 80%',
+                        toggleActions: 'play none none reverse'
+                    }
+                });
+            });
+            gsap.utils.toArray('.platform-feature').forEach(card => {
+                gsap.from(card, {
+                    opacity: 0,
+                    y: 30,
+                    duration: 0.8,
+                    scrollTrigger: {
+                        trigger: card,
+                        start: 'top 85%',
+                        toggleActions: 'play none none reverse'
+                    }
+                });
+            });
+            gsap.utils.toArray('.pricing-card').forEach((card, index) => {
+                gsap.from(card, {
+                    opacity: 0,
+                    y: 30,
+                    duration: 0.8,
+                    delay: index * 0.2,
+                    scrollTrigger: {
+                        trigger: card,
+                        start: 'top 85%',
+                        toggleActions: 'play none none reverse'
+                    }
+                });
+            });
+            gsap.utils.toArray('.algo-visual').forEach(visual => {
+                gsap.from(visual, {
+                    opacity: 0,
+                    y: 30,
+                    duration: 1,
+                    scrollTrigger: {
+                        trigger: visual,
+                        start: 'top 99%',
+                        toggleActions: 'play none none reverse'
+                    }
+                });
+            });
+        };
+        document.addEventListener('DOMContentLoaded', () => {
+            animateOnScroll();
+        });
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        const terminalContent = document.querySelector('.terminal-content');
+        if (terminalContent) {
+            const lines = [
+                '> Initializing trading engine...',
+                '> Connecting to markets...',
+                '> Loading market data...',
+                '> System ready for trading'
+            ];
+
+            let currentLine = 0;
+            const typeWriter = () => {
+                if (currentLine < lines.length) {
+                    const line = document.createElement('div');
+                    line.className = 'typing-animation';
+                    line.textContent = lines[currentLine];
+                    terminalContent.appendChild(line);
+                    currentLine++;
+                    setTimeout(typeWriter, 1000);
+                }
+            };
+
+            typeWriter();
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            const tickerContainer = document.querySelector('.market-ticker');
+            const tickerContent = document.getElementById('ticker-content');
+
+            if (tickerContainer && tickerContent) {
+                // Function to duplicate ticker content and append it to the container.
+                function duplicateTickerContent() {
+                    const clonedContent = tickerContent.cloneNode(true);
+                    tickerContainer.appendChild(clonedContent);
+                }
+
+                // Clone the ticker content initially to have two copies.
+                duplicateTickerContent();
+            }
+        });
+        document.querySelectorAll('.api-code-block').forEach(block => {
+            const copyButton = block.querySelector('svg').parentElement;
+
+            copyButton.addEventListener('click', async () => {
+                const code = block.querySelector('pre code').textContent;
+
+                try {
+                    await navigator.clipboard.writeText(code.trim());
+
+                    // Visual feedback
+                    copyButton.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        `;
+
+                    copyButton.classList.remove('text-gray-500');
+                    copyButton.classList.add('text-green-500');
+
+                    // Reset after 2 seconds
+                    setTimeout(() => {
+                        copyButton.innerHTML = `
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+          `;
+                        copyButton.classList.remove('text-green-500');
+                        copyButton.classList.add('text-gray-500');
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                }
+            });
+        });
+        const ctx = document.getElementById('myChart');
+        let chartInstance = null;
+
+        const createChart = () => {
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Price Data',
+                        data: [12, 19, 3, 5, 2, 3],
+                        borderColor: '#38bdf8',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'rgba(255,255,255,0.7)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'rgba(255,255,255,0.7)'
+                            }
+                        }
+
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(255,255,255,0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+        };
+        // Check if the device is mobile and adjust ScrollTrigger start value
+        const isMobile = window.innerWidth <= 768; // You can adjust the threshold to match mobile sizes
+
+        ScrollTrigger.create({
+            trigger: ctx,
+            start: isMobile ? 'top 90%' : 'top 80%', // Adjust the start position based on screen size
+            once: true,
+            onEnter: () => {
+                createChart();
+            }
+        });
+
+
+        document.getElementById('menu-toggle').addEventListener('click', function () {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+    </script>
+
+</body>
+
+</html>
